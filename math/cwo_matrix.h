@@ -3,13 +3,18 @@
 
 #include <stdlib.h>
 #include <malloc.h>
+#include <string.h>
 
+
+/*
+You can change type of matrix variables 
+ */
 //#define CWO_MAT_VAL_TYPE_INT
 //#define CWO_MAT_VAL_TYPE_LONG_LONG
-#define CWO_MAT_VAL_TYPE_FLOAT
+#define CWO_MAT_VAL_TYPE_FLOAT 
 //#define CWO_MAT_VAL_TYPE_DOUBLE
 
-#if (!defined(CWO_MAT_VAL_TYPE_INT) && !defined(CWO_MAT_VAL_TYPE_FLOAT) && !defined(CWO_MAT_VAL_TYPE_FLOAT) && !defined(CWO_MAT_VAL_TYPE_FLOAT))
+#if (!defined(CWO_MAT_VAL_TYPE_INT) && !defined(CWO_MAT_VAL_TYPE_LONG_LONG) && !defined(CWO_MAT_VAL_TYPE_FLOAT) && !defined(CWO_MAT_VAL_TYPE_DOUBLE))
     #error CWO_MAT_VAL_TYPE can not be defined
 #endif
 
@@ -42,7 +47,6 @@
     #define CWO_PRINT(v) printf("%.2lf ", (v))
 #endif
 
-#ifdef CWO_MATRIX_IMPLEMENTATIONS
 
 typedef struct{
     size_t w, h;
@@ -52,28 +56,64 @@ typedef struct{
 #define CWO_MAT_INDEX(m, i, j) (m).elems[(i)*(m).w + (j)]
 #define CWO_SWAP(a, b, t) t = a, a = b, b = t;
 
-void cwo_mat_resize(Matrix mat){
+void cwo_mat_create(Matrix* mat, size_t w, size_t h);
+void cwo_mat_delete(Matrix mat);
+void cwo_mat_copy(Matrix dest, Matrix src);
+void cwo_mat_resize(Matrix mat, CWO_MAT_VAL_TYPE val);
+void cwo_mat_randomize(Matrix mat);
+void cwo_mat_make_identity(Matrix mat);
+void cwo_mat_print(Matrix mat);
+
+
+void cwo_mat_scalar(Matrix mat, CWO_MAT_VAL_TYPE scal);
+void cwo_mat_sum(Matrix dest, Matrix a);
+void cwo_mat_sub(Matrix dest, Matrix a);
+void cwo_mat_transpose(Matrix mat);
+
+
+void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y);
+void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2);
+void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar);
+
+
+void cwo_mat_dot(Matrix dest, Matrix a, Matrix b);
+CWO_MAT_VAL_TYPE cwo_mat_determinant(Matrix mat);
+CWO_MAT_VAL_TYPE cwo_mat_laplace(Matrix mat);
+void cwo_mat_gauss(Matrix mat);
+
+
+#ifdef CWO_MATRIX_IMPLEMENTATIONS
+
+void cwo_mat_copy(Matrix dest, Matrix src){
+    memcpy(dest.elems, src.elems, sizeof(CWO_MAT_VAL_TYPE)*src.h*src.w);
+}
+
+
+void cwo_mat_resize(Matrix mat, CWO_MAT_VAL_TYPE val){
+    memset(mat.elems, val, mat.h*mat.w);
+}
+
+void cwo_mat_randomize(Matrix mat){
     for(size_t i = 0; i < mat.h; i++){
         for(size_t j = 0; j < mat.w; j++){
-            CWO_MAT_INDEX(mat, i, j) = CWO_MAT_VAL_TYPE_ZERO;
+            CWO_MAT_INDEX(mat, i, j) = (CWO_MAT_VAL_TYPE)rand()/
+                                        (CWO_MAT_VAL_TYPE)(RAND_MAX/10);
         }
     }
 }
 
-void cwo_mat_rand_elems(Matrix mat){
-    for(size_t i = 0; i < mat.h; i++){
-        for(size_t j = 0; j < mat.w; j++){
-            CWO_MAT_INDEX(mat, i, j) = (CWO_MAT_VAL_TYPE)rand()/(CWO_MAT_VAL_TYPE)(RAND_MAX/10);
-        }
+
+void cwo_mat_create(Matrix* mat, size_t w, size_t h){
+    if (mat->elems != NULL) {
+        cwo_mat_delete(*mat);
+        printf("Matrix already created, previous matrix was deleted\n");
     }
-}
-
-
-void cwo_mat_create(Matrix* mat, size_t w, size_t h, int resize){
-    mat->w = w, mat->h = h;
-    mat->elems = (CWO_MAT_VAL_TYPE*)malloc(sizeof(CWO_MAT_VAL_TYPE)*h*w);
-    if(resize != 0){
-        cwo_mat_resize(*mat);
+    mat->w = w;
+    mat->h = h;
+    mat->elems = (CWO_MAT_VAL_TYPE*)malloc(h * w * sizeof(CWO_MAT_VAL_TYPE));
+    if (mat->elems == NULL) {
+        printf("Memory allocation failed\n");
+        exit(1);
     }
 }
 
@@ -103,7 +143,9 @@ void cwo_mat_print(Matrix mat){
 
 
 void cwo_mat_delete(Matrix mat){
+    if(mat.elems == NULL) return;
     free(mat.elems);
+    mat.elems = NULL;
 }
 
 
@@ -148,6 +190,60 @@ void cwo_mat_transpose(Matrix mat){
     }    
 }
 
+void cwo_mat_laplace_submatrix(Matrix mat, Matrix sub, size_t row_ignore, size_t col_ignore){
+
+    size_t sub_i = 0;
+    size_t sub_j = 0;
+    for(size_t i = 0; i < mat.h; i++){
+        for(size_t j = 0; j < mat.w; j++){
+            if(i != row_ignore && j != col_ignore){
+                CWO_MAT_INDEX(sub, sub_i, sub_j) = CWO_MAT_INDEX(mat, i, j);
+                sub_j++;
+                if(sub_j >= sub.w){
+                    sub_j = 0;
+                    sub_i++;
+                }
+            }
+        }
+    }
+}
+
+void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y){
+
+    size_t mod_x = mat.w;
+    size_t mod_y = mat.h;
+
+    for(size_t i = 0; i < sub.h; i++){
+        for(size_t j = 0; j < sub.w; j++){
+            CWO_MAT_INDEX(sub, i, j) = CWO_MAT_INDEX(mat, (i + y)%mod_y, (j + x)%mod_x);
+        }
+    }
+}
+
+void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2){
+
+    CWO_MAT_VAL_TYPE t;
+    for(int j = 0; j < mat.w; j++){
+        CWO_SWAP(CWO_MAT_INDEX(mat, r1, j), CWO_MAT_INDEX(mat, r2, j), t);
+    }
+}
+
+void cwo_mat_swap_cols(Matrix mat, size_t c1, size_t c2){
+
+    CWO_MAT_VAL_TYPE t;
+    for(int i = 0; i < mat.h; i++){
+        CWO_SWAP(CWO_MAT_INDEX(mat, i, c1), CWO_MAT_INDEX(mat, i, c2), t);
+    }
+}
+
+void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar){
+
+    for(size_t j = 0; j < mat.w; j++){
+        CWO_MAT_INDEX(mat, dest, j) -= scalar*CWO_MAT_INDEX(mat, r, j);
+    }
+}
+
+
 
 /* 
 cwo_mat_dot_product function must be used 
@@ -176,68 +272,74 @@ void cwo_mat_dot(Matrix dest, Matrix a, Matrix b){
 }
 
 
-void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y){
+CWO_MAT_VAL_TYPE cwo_mat_determinant(Matrix mat){
+    
+    if(mat.w != mat.h) return CWO_MAT_VAL_TYPE_ZERO;
 
-    size_t mod_x = mat.w;
-    size_t mod_y = mat.h;
-
-    for(size_t i = 0; i < sub.h; i++){
-        for(size_t j = 0; j < sub.w; j++){
-            CWO_MAT_INDEX(sub, i, j) = CWO_MAT_INDEX(mat, (i + y)%mod_y, (j + x)%mod_x);
+    /*
+    Returns product of diagonal elements if
+    matrix is processed by Gaussian elimination
+     */
+    int eliminated = 1;
+    for(size_t i = mat.h-1; i > 0; i--){
+        for(size_t j = 0; j < i; j++){
+            if(CWO_MAT_INDEX(mat, i, j) == 0) continue;
+            eliminated = 0;
         }
     }
+
+    if(eliminated == 1){
+        CWO_MAT_VAL_TYPE product = 1;
+        for(size_t i = 0; i < mat.h && i < mat.w; i++){
+            product *= CWO_MAT_INDEX(mat, i, i);
+        }
+        return product;
+    }
+
+    return cwo_mat_laplace(mat);
 }
+
 
 /*
 Under development
+cwo_mat_determinant function calculates determinant 
+with Laplace expansion technique
 */
-// CWO_MAT_VAL_TYPE cwo_mat_determinant(Matrix mat){
-    
-//     if(mat.w == 2 && mat.h == 2)
-//         return (CWO_MAT_INDEX(mat, 0, 0) * CWO_MAT_INDEX(mat, 1, 1) - CWO_MAT_INDEX(mat, 0, 1) * CWO_MAT_INDEX(mat, 1, 0));
+CWO_MAT_VAL_TYPE cwo_mat_laplace(Matrix mat){
 
-    
-//     int a = 1;
-//     CWO_MAT_VAL_TYPE res = CWO_MAT_VAL_TYPE_ZERO;
-//     Matrix sub; 
-//     cwo_mat_create(&sub, mat.w-1, mat.h-1, 0);
-
-//     for(size_t j = 0; j < mat.w; j++){
-//         if(a == 1)
-//             res +=  CWO_MAT_INDEX(mat, 0, j) * cwo_mat_determinant(sub);
-//         else 
-//             res -=  CWO_MAT_INDEX(mat, 0, j) * cwo_mat_determinant(sub);
-//         a = -a;
-//     }
-
-//     cwo_mat_delete(sub);
-//     return res;
-// }
-
-
-void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2){
-
-    CWO_MAT_VAL_TYPE t;
-    for(int j = 0; j < mat.w; j++){
-        CWO_SWAP(CWO_MAT_INDEX(mat, r1, j), CWO_MAT_INDEX(mat, r2, j), t);
+    if(mat.w == 2 && mat.h == 2){
+        CWO_MAT_VAL_TYPE prod = (CWO_MAT_INDEX(mat, 0, 0) * CWO_MAT_INDEX(mat, 1, 1) -
+                                 CWO_MAT_INDEX(mat, 0, 1) * CWO_MAT_INDEX(mat, 1, 0));
+        return prod;
     }
-}
-
-
-void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar){
+    
+    int sign = 1;
+    CWO_MAT_VAL_TYPE res = CWO_MAT_VAL_TYPE_ZERO;
+    Matrix sub;
+    sub.elems = NULL;
+    cwo_mat_create(&sub, mat.w-1, mat.h-1);
 
     for(size_t j = 0; j < mat.w; j++){
-        CWO_MAT_INDEX(mat, dest, j) = CWO_MAT_INDEX(mat, dest, j) - scalar*CWO_MAT_INDEX(mat, r, j);
+        cwo_mat_laplace_submatrix(mat, sub, 0, j);
+        if(sign == 1){
+            res +=  (CWO_MAT_INDEX(mat, 0, j) * cwo_mat_laplace(sub));
+        }
+        else{
+            res -=  (CWO_MAT_INDEX(mat, 0, j) * cwo_mat_laplace(sub));
+        }
+        sign = -sign;
     }
+
+    cwo_mat_delete(sub);
+    return res;    
 }
 
 
 void cwo_mat_gauss(Matrix mat){
-    for(size_t rows = mat.h, cols = mat.w, j = 0; j <= cols; j++){
-        if(rows == 0 || cols == 0) break;
+    for(size_t rows = mat.h, cols = mat.w, j = 0; j < cols; j++){
 
         if(CWO_MAT_INDEX(mat, j, j) == CWO_MAT_VAL_TYPE_ZERO){
-            for(size_t k = 0; k < rows; k++){
+            for(size_t k = j; k < rows; k++){
                 if(CWO_MAT_INDEX(mat, j, k) != CWO_MAT_VAL_TYPE_ZERO){
                     cwo_mat_swap_rows(mat, 0, k);
                     break;
@@ -249,25 +351,23 @@ void cwo_mat_gauss(Matrix mat){
             }
         }
 
-        for(size_t i = j+1; i <= rows; i++){
+        for(size_t i = j+1; i < rows; i++){
             CWO_MAT_VAL_TYPE scal = CWO_MAT_INDEX(mat, i, j) / CWO_MAT_INDEX(mat, j, j);
             cwo_mat_row_sub(mat, i, j, scal);
         }
     }
 }
 
-CWO_MAT_VAL_TYPE cwo_mat_gauss_determinant(Matrix mat){
-
-    CWO_MAT_VAL_TYPE product = 1;
-    for(size_t i = 0; i < mat.h && i < mat.w; i++){
-        product *= CWO_MAT_INDEX(mat, i, i);
-    }
-
-    return product;
-}
+// Some cpp operators
+#ifdef __cplusplus
 
 
 
+#endif //__cplusplus
+
+
+
+// TODO: determinant with Laplace expansion
 // TODO: inverse of a matrix
 // TODO: matrix transformations
 

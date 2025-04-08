@@ -7,7 +7,6 @@ void matrix_tests();
 
 int main(){
     matrix_tests();
-
     return 0;
 }
 
@@ -17,11 +16,21 @@ void matrix_tests(){
     Matrix mat;
     Matrix mat2;
 
-    cwo_mat_create(&mat, 3, 3, 1);
-    cwo_mat_make_identity(mat);
-    cwo_mat_scalar(mat, 3.0f);
+    cwo_mat_create(&mat, 3, 3);
+    cwo_mat_create(&mat2, 3, 3);
+    // cwo_mat_make_identity(mat);
+    // cwo_mat_scalar(mat, 3.0f);
+    cwo_mat_randomize(mat);
     cwo_mat_print(mat);
+    printf("\n------------------------------\n");
+    //cwo_mat_print(mat);
+    cwo_mat_copy(mat2, mat);
+    cwo_mat_gauss(mat2);
+    printf("\n------------------------------\n");
+    cwo_mat_print(mat2);
 
+    //printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat2));
+    printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat));
     printf("\n------------------------------\n");
 
     // cwo_mat_create(&mat2, 5, 5, 1);
@@ -38,7 +47,8 @@ void matrix_tests(){
     // cwo_mat_gauss(mat);
     // cwo_mat_print(mat);
 
-    // cwo_mat_delete(mat);
+    cwo_mat_delete(mat);
+    cwo_mat_delete(mat2);
 }
 
 void stack_tests(){
@@ -73,3 +83,5 @@ void ll_tests(){
 
     // cwo_delete_list(&list);
 }
+
+

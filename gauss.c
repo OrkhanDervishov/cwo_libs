@@ -1,13 +1,14 @@
 #define CWO_MATRIX_IMPLEMENTATIONS
 #include "math/cwo_matrix.h"
+#include <string.h>
 
 
 #define ROWS 4
 #define COLS 4
 
-int gauss(){
+int main1(){
     Matrix mat;
-    cwo_mat_create(&mat, ROWS, COLS, 0);
+    cwo_mat_create(&mat, ROWS, COLS);
 
     // your matrix
     CWO_MAT_VAL_TYPE mymatrix[ROWS * COLS] = {
@@ -17,15 +18,11 @@ int gauss(){
         2.8f, 8.7f, 9.0f, 15.4f
     };
 
-    for(size_t i = 0; i < ROWS; i++){
-        for(size_t j = 0; j < COLS; j++){
-            mat.elems[i*COLS + j] = mymatrix[i*COLS + j];
-        }
-    }
+    memcpy(mat.elems, mymatrix, sizeof(CWO_MAT_VAL_TYPE) * ROWS * COLS);
 
     cwo_mat_print(mat);
     printf("\n-----------------------\n");
-    cwo_mat_gauss(mat);
-    cwo_mat_print(mat);
-    printf("\n\ndetermiant: %f\n", cwo_mat_gauss_determinant(mat));
+    // cwo_mat_gauss(mat);
+    // cwo_mat_print(mat);
+    printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat));
 }
