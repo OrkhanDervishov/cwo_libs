@@ -1,5 +1,10 @@
 run: test
+	clear
 	./test
 
-build: test.c
-	gcc -o test test.c
+gauss: gauss.c
+	gcc -W -Wextra -o test gauss.c
+
+
+test: test.c
+	gcc -W -Wextra -o test test.c

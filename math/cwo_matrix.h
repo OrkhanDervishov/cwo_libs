@@ -65,7 +65,7 @@ void cwo_mat_make_identity(Matrix mat);
 void cwo_mat_print(Matrix mat);
 
 
-void cwo_mat_scalar(Matrix mat, CWO_MAT_VAL_TYPE scal);
+void cwo_mat_scale(Matrix mat, CWO_MAT_VAL_TYPE scal);
 void cwo_mat_sum(Matrix dest, Matrix a);
 void cwo_mat_sub(Matrix dest, Matrix a);
 void cwo_mat_transpose(Matrix mat);
@@ -73,6 +73,7 @@ void cwo_mat_transpose(Matrix mat);
 
 void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y);
 void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2);
+void cwo_mat_swap_cols(Matrix mat, size_t c1, size_t c2);
 void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar);
 
 
@@ -85,15 +86,28 @@ void cwo_mat_gauss(Matrix mat);
 #ifdef CWO_MATRIX_IMPLEMENTATIONS
 
 void cwo_mat_copy(Matrix dest, Matrix src){
+    if(dest.elems == NULL || src.elems == NULL) return;
+
+    if(dest.h != src.h || dest.w != src.w){
+        return;
+    }
     memcpy(dest.elems, src.elems, sizeof(CWO_MAT_VAL_TYPE)*src.h*src.w);
 }
 
 
 void cwo_mat_resize(Matrix mat, CWO_MAT_VAL_TYPE val){
-    memset(mat.elems, val, mat.h*mat.w);
+    if(mat.elems == NULL) return;
+
+    for(size_t i = 0; i < mat.h; i++){
+        for(size_t j = 0; j < mat.w; j++){
+            CWO_MAT_INDEX(mat, i, j) = val;
+        }
+    }
 }
 
 void cwo_mat_randomize(Matrix mat){
+    if(mat.elems == NULL) return;
+
     for(size_t i = 0; i < mat.h; i++){
         for(size_t j = 0; j < mat.w; j++){
             CWO_MAT_INDEX(mat, i, j) = (CWO_MAT_VAL_TYPE)rand()/
@@ -112,13 +126,14 @@ void cwo_mat_create(Matrix* mat, size_t w, size_t h){
     mat->h = h;
     mat->elems = (CWO_MAT_VAL_TYPE*)malloc(h * w * sizeof(CWO_MAT_VAL_TYPE));
     if (mat->elems == NULL) {
-        printf("Memory allocation failed\n");
+        printf("Memory allocation failed at cwo_mat_create\n");
         exit(1);
     }
 }
 
 
 void cwo_mat_make_identity(Matrix mat){
+    if(mat.elems == NULL) return;
     if(mat.w != mat.h) return;
 
     for(size_t i = 0; i < mat.h; i++){
@@ -133,6 +148,8 @@ void cwo_mat_make_identity(Matrix mat){
 
 
 void cwo_mat_print(Matrix mat){
+    if(mat.elems == NULL) return;
+
     for(size_t i = 0; i < mat.h; i++){
         for(size_t j = 0; j < mat.w; j++){
             CWO_PRINT(CWO_MAT_INDEX(mat, i, j));
@@ -149,7 +166,8 @@ void cwo_mat_delete(Matrix mat){
 }
 
 
-void cwo_mat_scalar(Matrix mat, CWO_MAT_VAL_TYPE scal){
+void cwo_mat_scale(Matrix mat, CWO_MAT_VAL_TYPE scal){
+    if(mat.elems == NULL) return;
 
     for(size_t i = 0; i < mat.h; i++){
         for(size_t j = 0; j < mat.w; j++){
@@ -160,6 +178,8 @@ void cwo_mat_scalar(Matrix mat, CWO_MAT_VAL_TYPE scal){
 
 
 void cwo_mat_sum(Matrix dest, Matrix a){
+    if(dest.elems == NULL || a.elems == NULL) return;
+
     if(dest.h != a.h || dest.w != a.w) return;
 
     for(size_t i = 0; i < dest.h; i++){
@@ -171,6 +191,8 @@ void cwo_mat_sum(Matrix dest, Matrix a){
 
 
 void cwo_mat_sub(Matrix dest, Matrix a){
+    if(dest.elems == NULL || a.elems == NULL) return;
+
     if(dest.h != a.h || dest.w != a.w) return;
 
     for(size_t i = 0; i < dest.h; i++){
@@ -181,6 +203,7 @@ void cwo_mat_sub(Matrix dest, Matrix a){
 
 
 void cwo_mat_transpose(Matrix mat){
+    if(mat.elems == NULL) return;
 
     CWO_MAT_VAL_TYPE t;
     for(size_t i = 0; i < mat.h; i++){
@@ -191,6 +214,7 @@ void cwo_mat_transpose(Matrix mat){
 }
 
 void cwo_mat_laplace_submatrix(Matrix mat, Matrix sub, size_t row_ignore, size_t col_ignore){
+    if(mat.elems == NULL || sub.elems == NULL) return;
 
     size_t sub_i = 0;
     size_t sub_j = 0;
@@ -209,6 +233,7 @@ void cwo_mat_laplace_submatrix(Matrix mat, Matrix sub, size_t row_ignore, size_t
 }
 
 void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y){
+    if(mat.elems == NULL || sub.elems == NULL) return;
 
     size_t mod_x = mat.w;
     size_t mod_y = mat.h;
@@ -221,6 +246,7 @@ void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y){
 }
 
 void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2){
+    if(mat.elems == NULL) return;
 
     CWO_MAT_VAL_TYPE t;
     for(int j = 0; j < mat.w; j++){
@@ -229,6 +255,7 @@ void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2){
 }
 
 void cwo_mat_swap_cols(Matrix mat, size_t c1, size_t c2){
+    if(mat.elems == NULL) return;
 
     CWO_MAT_VAL_TYPE t;
     for(int i = 0; i < mat.h; i++){
@@ -237,6 +264,7 @@ void cwo_mat_swap_cols(Matrix mat, size_t c1, size_t c2){
 }
 
 void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar){
+    if(mat.elems == NULL) return;
 
     for(size_t j = 0; j < mat.w; j++){
         CWO_MAT_INDEX(mat, dest, j) -= scalar*CWO_MAT_INDEX(mat, r, j);
@@ -253,6 +281,7 @@ and CWO_MAT_VAL_TYPE_ZERO must be identity
 element of this group. 
 */
 void cwo_mat_dot(Matrix dest, Matrix a, Matrix b){
+    if(dest.elems == NULL || a.elems == NULL || b.elems == NULL) return;
     if(a.w != b.h) return;
     if(a.h != dest.h) return;
     if(b.w != dest.w) return;
@@ -273,7 +302,7 @@ void cwo_mat_dot(Matrix dest, Matrix a, Matrix b){
 
 
 CWO_MAT_VAL_TYPE cwo_mat_determinant(Matrix mat){
-    
+    if(mat.elems == NULL) return CWO_MAT_VAL_TYPE_ZERO;
     if(mat.w != mat.h) return CWO_MAT_VAL_TYPE_ZERO;
 
     /*
@@ -301,11 +330,11 @@ CWO_MAT_VAL_TYPE cwo_mat_determinant(Matrix mat){
 
 
 /*
-Under development
-cwo_mat_determinant function calculates determinant 
+cwo_mat_laplace function calculates determinant 
 with Laplace expansion technique
 */
 CWO_MAT_VAL_TYPE cwo_mat_laplace(Matrix mat){
+    if(mat.elems == NULL) return CWO_MAT_VAL_TYPE_ZERO;
 
     if(mat.w == 2 && mat.h == 2){
         CWO_MAT_VAL_TYPE prod = (CWO_MAT_INDEX(mat, 0, 0) * CWO_MAT_INDEX(mat, 1, 1) -
@@ -335,7 +364,13 @@ CWO_MAT_VAL_TYPE cwo_mat_laplace(Matrix mat){
 }
 
 
+/*
+Performs Gaussian elimination
+operation on the matrix 
+ */
 void cwo_mat_gauss(Matrix mat){
+    if(mat.elems == NULL) return;
+
     for(size_t rows = mat.h, cols = mat.w, j = 0; j < cols; j++){
 
         if(CWO_MAT_INDEX(mat, j, j) == CWO_MAT_VAL_TYPE_ZERO){
@@ -367,9 +402,13 @@ void cwo_mat_gauss(Matrix mat){
 
 
 
-// TODO: determinant with Laplace expansion
 // TODO: inverse of a matrix
 // TODO: matrix transformations
+// TODO: finding matrix basis
+// TODO: finding eigenvalue and eigenvector of a matrix
+// TODO: cpp operators
+// TODO: matrix row echelon form
+// TODO: matrix row reduced echelon form
 
 #endif //CWO_MATRIX_IMPLEMENTATIONS
 
