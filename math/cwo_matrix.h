@@ -84,6 +84,7 @@ CWO_MAT_VAL_TYPE cwo_mat_laplace(Matrix mat);
 void cwo_mat_gauss(Matrix mat);
 void cwo_mat_echelon(Matrix mat);
 void cwo_mat_reduced(Matrix mat);
+void cwo_mat_inverse(Matrix inv, Matrix src);
 
 
 #ifdef CWO_MATRIX_IMPLEMENTATIONS
@@ -123,8 +124,8 @@ void cwo_mat_randomize(Matrix mat){
 void cwo_mat_create(Matrix* mat, size_t w, size_t h){
     if(w <= 0 || h <= 0) return;
     if (mat->elems != NULL) {
-        cwo_mat_delete(*mat);
         printf("Matrix already created, previous matrix was deleted\n");
+        cwo_mat_delete(*mat);
     }
     mat->w = w;
     mat->h = h;
@@ -307,7 +308,7 @@ void cwo_mat_dot(Matrix dest, Matrix a, Matrix b){
             for(size_t k = 0; k < n; k++){
                 sum += CWO_MAT_INDEX(a, i, k) * CWO_MAT_INDEX(b, k, j);
             }
-            CWO_MAT_INDEX(dest, i, j) = sum;
+            CWO_MAT_INDEX(dest, i, j) = (sum == CWO_MAT_VAL_TYPE_ZERO ? CWO_MAT_VAL_TYPE_ZERO : sum);
             sum = CWO_MAT_VAL_TYPE_ZERO;
         }
     }
@@ -414,7 +415,7 @@ void cwo_mat_echelon(Matrix mat){
     for(size_t i = 0; i < mat.h; i++){
         for(size_t j = 0; j < mat.w; j++){
             if(CWO_MAT_INDEX(mat, i, j) != 0){
-                CWO_MAT_VAL_TYPE scal = 1.0f/CWO_MAT_INDEX(mat, i, j);
+                CWO_MAT_VAL_TYPE scal = CWO_MAT_VAL_TYPE_ONE/CWO_MAT_INDEX(mat, i, j);
                 cwo_mat_row_scale(mat, i, scal);
                 break;
             }
@@ -425,7 +426,6 @@ void cwo_mat_echelon(Matrix mat){
 void cwo_mat_reduced(Matrix mat){
     if(mat.elems == NULL) return;
     cwo_mat_echelon(mat);
-
 
     for(size_t i = 1; i < mat.h; i++){
         for(size_t j = 0; j < mat.w; j++){
@@ -438,6 +438,85 @@ void cwo_mat_reduced(Matrix mat){
             }
         }
     }    
+}
+
+
+void cwo_mat_inverse(Matrix inv, Matrix mat){
+    if(inv.h != mat.h || inv.w != mat.h) return;
+    if(inv.elems == NULL || mat.elems == NULL) return;
+
+    Matrix copy;
+    copy.elems = NULL;
+    cwo_mat_create(&copy, mat.w, mat.h);
+    cwo_mat_copy(copy, mat);
+
+    cwo_mat_make_identity(inv);
+    
+    cwo_mat_print(copy);
+    printf("\n\n");
+
+    
+    cwo_mat_print(inv);
+    printf("\n\n");
+
+
+    for(size_t rows = mat.h, cols = mat.w, j = 0; j < cols; j++){
+
+        if(CWO_MAT_INDEX(copy, j, j) == CWO_MAT_VAL_TYPE_ZERO){
+            for(size_t k = j; k < rows; k++){
+                if(CWO_MAT_INDEX(copy, j, k) != CWO_MAT_VAL_TYPE_ZERO){
+                    cwo_mat_swap_rows(copy, 0, k);
+                    cwo_mat_swap_rows(inv, 0, k);
+                    break;
+                }
+            }
+            if(CWO_MAT_INDEX(copy, j, j) == CWO_MAT_VAL_TYPE_ZERO){
+                // pass this column
+                continue;
+            }
+        }
+
+        for(size_t i = j+1; i < rows; i++){
+            CWO_MAT_VAL_TYPE scal = CWO_MAT_INDEX(copy, i, j) / CWO_MAT_INDEX(copy, j, j);
+            cwo_mat_row_sub(copy, i, j, scal);
+            cwo_mat_row_sub(inv, i, j, scal);
+        }
+    }
+
+    
+    cwo_mat_print(copy);
+    printf("\n\n");
+
+
+    for(size_t i = 0; i < copy.h; i++){
+        for(size_t j = 0; j < copy.w; j++){
+            if(CWO_MAT_INDEX(copy, i, j) != 0){
+                CWO_MAT_VAL_TYPE scal = CWO_MAT_VAL_TYPE_ONE/CWO_MAT_INDEX(copy, i, j);
+                cwo_mat_row_scale(copy, i, scal);
+                cwo_mat_row_scale(inv, i, scal);
+                break;
+            }
+        }
+    }
+    
+    cwo_mat_print(copy);
+    printf("\n\n");
+
+    for(size_t i = 1; i < copy.h; i++){
+        for(size_t j = 0; j < copy.w; j++){
+            if(CWO_MAT_INDEX(copy, i, j) != 0){
+                for(size_t k = i; k > 0; k--){
+                    CWO_MAT_VAL_TYPE scal = CWO_MAT_INDEX(copy, k-1, j)/CWO_MAT_INDEX(copy, i, j);
+                    cwo_mat_row_sub(copy, k-1, i, scal);
+                    cwo_mat_row_sub(inv, k-1, i, scal);
+                }
+                break;
+            }
+        }
+    }  
+    
+    cwo_mat_print(copy);
+    cwo_mat_delete(copy);
 }
 
 // Some cpp operators

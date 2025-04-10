@@ -44,30 +44,44 @@ void vector_tests(){
 void matrix_tests(){
     Matrix mat;
     Matrix mat2;
+    Matrix inv;
 
     cwo_mat_create(&mat, 3, 3);
     cwo_mat_create(&mat2, 3, 3);
+    cwo_mat_create(&inv, 3, 3);
+    
     // cwo_mat_make_identity(mat);
     // cwo_mat_scalar(mat, 3.0f);
     cwo_mat_randomize(mat);
     cwo_mat_print(mat);
     printf("\n------------------------------\n");
-    //cwo_mat_print(mat);
-    cwo_mat_copy(mat2, mat);
-    cwo_mat_gauss(mat2);
-    cwo_mat_print(mat2);
-    printf("\n------------------------------\n");
-    cwo_mat_echelon(mat2);
-    printf("\n------------------------------\n");
-    cwo_mat_print(mat2);
+    // //cwo_mat_print(mat);
+    // cwo_mat_copy(mat2, mat);
+    // cwo_mat_gauss(mat2);
+    // cwo_mat_print(mat2);
+    // printf("\n------------------------------\n");
+    // cwo_mat_echelon(mat2);
+    // printf("\n------------------------------\n");
+    // cwo_mat_print(mat2);
 
-    cwo_mat_reduced(mat2);
-    printf("\n------------------------------\n");
-    cwo_mat_print(mat2);
+    // cwo_mat_reduced(mat2);
+    // printf("\n------------------------------\n");
+    // cwo_mat_print(mat2);
 
     //printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat2));
     // printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat));
     printf("\n------------------------------\n");
+
+    cwo_mat_inverse(inv, mat);
+    printf("\n------------------------------\n");
+    cwo_mat_print(inv);
+
+    printf("\n------------------------------\n");
+    cwo_mat_dot(mat2, mat, inv);
+    cwo_mat_print(mat2);
+
+
+
 
     // cwo_mat_create(&mat2, 5, 5, 1);
     // cwo_mat_rand_elems(mat2);
@@ -83,6 +97,7 @@ void matrix_tests(){
     // cwo_mat_gauss(mat);
     // cwo_mat_print(mat);
 
+    cwo_mat_delete(inv);
     cwo_mat_delete(mat);
     cwo_mat_delete(mat2);
 }
