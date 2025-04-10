@@ -1,6 +1,6 @@
-//#define CWO_MATRIX_IMPLEMENTATIONS
-#define CWO_VECTOR_IMPLEMENTATIONS
-//#include "math/cwo_matrix.h"
+#define CWO_MATRIX_IMPLEMENTATIONS
+//#define CWO_VECTOR_IMPLEMENTATIONS
+#include "math/cwo_matrix.h"
 #include "math/cwo_vector.h"
 
 void ll_tests();
@@ -10,7 +10,7 @@ void vector_tests();
 
 
 int main(){
-    vector_tests();
+    matrix_tests();
     return 0;
 }
 
@@ -55,11 +55,18 @@ void matrix_tests(){
     //cwo_mat_print(mat);
     cwo_mat_copy(mat2, mat);
     cwo_mat_gauss(mat2);
+    cwo_mat_print(mat2);
+    printf("\n------------------------------\n");
+    cwo_mat_echelon(mat2);
+    printf("\n------------------------------\n");
+    cwo_mat_print(mat2);
+
+    cwo_mat_reduced(mat2);
     printf("\n------------------------------\n");
     cwo_mat_print(mat2);
 
     //printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat2));
-    printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat));
+    // printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat));
     printf("\n------------------------------\n");
 
     // cwo_mat_create(&mat2, 5, 5, 1);

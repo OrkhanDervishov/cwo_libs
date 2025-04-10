@@ -75,12 +75,15 @@ void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y);
 void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2);
 void cwo_mat_swap_cols(Matrix mat, size_t c1, size_t c2);
 void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar);
+void cwo_mat_row_scal(Matrix mat, size_t r, CWO_MAT_VAL_TYPE scalar);
 
 
 void cwo_mat_dot(Matrix dest, Matrix a, Matrix b);
 CWO_MAT_VAL_TYPE cwo_mat_determinant(Matrix mat);
 CWO_MAT_VAL_TYPE cwo_mat_laplace(Matrix mat);
 void cwo_mat_gauss(Matrix mat);
+void cwo_mat_echelon(Matrix mat);
+void cwo_mat_reduced(Matrix mat);
 
 
 #ifdef CWO_MATRIX_IMPLEMENTATIONS
@@ -118,6 +121,7 @@ void cwo_mat_randomize(Matrix mat){
 
 
 void cwo_mat_create(Matrix* mat, size_t w, size_t h){
+    if(w <= 0 || h <= 0) return;
     if (mat->elems != NULL) {
         cwo_mat_delete(*mat);
         printf("Matrix already created, previous matrix was deleted\n");
@@ -213,6 +217,10 @@ void cwo_mat_transpose(Matrix mat){
     }    
 }
 
+
+
+
+
 void cwo_mat_laplace_submatrix(Matrix mat, Matrix sub, size_t row_ignore, size_t col_ignore){
     if(mat.elems == NULL || sub.elems == NULL) return;
 
@@ -249,7 +257,7 @@ void cwo_mat_swap_rows(Matrix mat, size_t r1, size_t r2){
     if(mat.elems == NULL) return;
 
     CWO_MAT_VAL_TYPE t;
-    for(int j = 0; j < mat.w; j++){
+    for(size_t j = 0; j < mat.w; j++){
         CWO_SWAP(CWO_MAT_INDEX(mat, r1, j), CWO_MAT_INDEX(mat, r2, j), t);
     }
 }
@@ -258,7 +266,7 @@ void cwo_mat_swap_cols(Matrix mat, size_t c1, size_t c2){
     if(mat.elems == NULL) return;
 
     CWO_MAT_VAL_TYPE t;
-    for(int i = 0; i < mat.h; i++){
+    for(size_t i = 0; i < mat.h; i++){
         CWO_SWAP(CWO_MAT_INDEX(mat, i, c1), CWO_MAT_INDEX(mat, i, c2), t);
     }
 }
@@ -271,7 +279,12 @@ void cwo_mat_row_sub(Matrix mat, size_t dest, size_t r, CWO_MAT_VAL_TYPE scalar)
     }
 }
 
+void cwo_mat_row_scale(Matrix mat, size_t r, CWO_MAT_VAL_TYPE scalar){
 
+    for(size_t j = 0; j < mat.w; j++){
+        CWO_MAT_INDEX(mat, r, j) *= scalar;
+    }
+}
 
 /* 
 cwo_mat_dot_product function must be used 
@@ -291,7 +304,7 @@ void cwo_mat_dot(Matrix dest, Matrix a, Matrix b){
 
     for(size_t i = 0; i < dest.h; i++){
         for(size_t j = 0; j < dest.w; j++){
-            for(int k = 0; k < n; k++){
+            for(size_t k = 0; k < n; k++){
                 sum += CWO_MAT_INDEX(a, i, k) * CWO_MAT_INDEX(b, k, j);
             }
             CWO_MAT_INDEX(dest, i, j) = sum;
@@ -393,6 +406,40 @@ void cwo_mat_gauss(Matrix mat){
     }
 }
 
+
+void cwo_mat_echelon(Matrix mat){
+    if(mat.elems == NULL) return;
+    cwo_mat_gauss(mat);
+
+    for(size_t i = 0; i < mat.h; i++){
+        for(size_t j = 0; j < mat.w; j++){
+            if(CWO_MAT_INDEX(mat, i, j) != 0){
+                CWO_MAT_VAL_TYPE scal = 1.0f/CWO_MAT_INDEX(mat, i, j);
+                cwo_mat_row_scale(mat, i, scal);
+                break;
+            }
+        }
+    }
+}
+
+void cwo_mat_reduced(Matrix mat){
+    if(mat.elems == NULL) return;
+    cwo_mat_echelon(mat);
+
+
+    for(size_t i = 1; i < mat.h; i++){
+        for(size_t j = 0; j < mat.w; j++){
+            if(CWO_MAT_INDEX(mat, i, j) != 0){
+                for(size_t k = i; k > 0; k--){
+                    CWO_MAT_VAL_TYPE scal = CWO_MAT_INDEX(mat, k-1, j)/CWO_MAT_INDEX(mat, i, j);
+                    cwo_mat_row_sub(mat, k-1, i, scal);
+                }
+                break;
+            }
+        }
+    }    
+}
+
 // Some cpp operators
 #ifdef __cplusplus
 
@@ -407,8 +454,6 @@ void cwo_mat_gauss(Matrix mat){
 // TODO: finding matrix basis
 // TODO: finding eigenvalue and eigenvector of a matrix
 // TODO: cpp operators
-// TODO: matrix row echelon form
-// TODO: matrix row reduced echelon form
 
 #endif //CWO_MATRIX_IMPLEMENTATIONS
 

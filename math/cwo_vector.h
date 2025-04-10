@@ -70,6 +70,7 @@ void cwo_vec_print(Vector vec);
 void cwo_vec_scale(Vector vec, CWO_VEC_VAL_TYPE scalar);
 void cwo_vec_sum(Vector dest, Vector vec);
 void cwo_vec_sub(Vector dest, Vector vec);
+CWO_VEC_VAL_TYPE cwo_vec_mag(Vector vec);
 CWO_VEC_VAL_TYPE cwo_vec_dot(Vector a, Vector b);
 void cwo_vec_cross(Vector norm, Vector a, Vector b);
 
@@ -160,6 +161,16 @@ void cwo_vec_sum(Vector dest, Vector vec){
 }
 
 
+void cwo_vec_sub(Vector dest, Vector vec){
+    if(dest.elems == NULL || vec.elems == NULL) return;
+    if(dest.size != vec.size) return;
+
+    for(size_t i = 0; i < vec.size; i++){
+        dest.elems[i] -= vec.elems[i];
+    }
+}
+
+
 CWO_VEC_VAL_TYPE cwo_vec_mag(Vector vec){
     if(vec.elems == NULL) return CWO_VEC_VAL_TYPE_ZERO;
 
@@ -173,16 +184,6 @@ CWO_VEC_VAL_TYPE cwo_vec_mag(Vector vec){
     #else
     return sqrt(sum);
     #endif
-}
-
-
-void cwo_vec_sub(Vector dest, Vector vec){
-    if(dest.elems == NULL || vec.elems == NULL) return;
-    if(dest.size != vec.size) return;
-
-    for(size_t i = 0; i < vec.size; i++){
-        dest.elems[i] -= vec.elems[i];
-    }
 }
 
 
