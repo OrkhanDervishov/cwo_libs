@@ -69,6 +69,8 @@ void cwo_mat_scale(Matrix mat, CWO_MAT_VAL_TYPE scal);
 void cwo_mat_sum(Matrix dest, Matrix a);
 void cwo_mat_sub(Matrix dest, Matrix a);
 void cwo_mat_transpose(Matrix mat);
+int cwo_mat_issymmetric(Matrix mat);
+CWO_MAT_VAL_TYPE cwo_mat_trace(Matrix mat);
 
 
 void cwo_mat_submatrix(Matrix mat, Matrix sub, size_t x, size_t y);
@@ -219,7 +221,28 @@ void cwo_mat_transpose(Matrix mat){
 }
 
 
+int cwo_mat_issymmetric(Matrix mat){
+    if(mat.elems == NULL) return;
 
+    for(size_t i = 0; i < mat.h; i++){
+        for(size_t j = i; j < mat.w; j++){
+            if(CWO_MAT_INDEX(mat, i, j) != CWO_MAT_INDEX(mat, j, i)) return 0;
+        }
+    }
+    return 1;
+}
+
+
+CWO_MAT_VAL_TYPE cwo_mat_trace(Matrix mat){
+    if(mat.elems == NULL) return;
+    if(mat.h != mat.w) return;
+
+    CWO_MAT_VAL_TYPE sum = CWO_MAT_VAL_TYPE_ZERO;
+    for(size_t i = 0; i < mat.h; i++){
+        sum += CWO_MAT_INDEX(mat, i, i);
+    }
+    return sum;
+}
 
 
 void cwo_mat_laplace_submatrix(Matrix mat, Matrix sub, size_t row_ignore, size_t col_ignore){
@@ -451,14 +474,6 @@ void cwo_mat_inverse(Matrix inv, Matrix mat){
     cwo_mat_copy(copy, mat);
 
     cwo_mat_make_identity(inv);
-    
-    cwo_mat_print(copy);
-    printf("\n\n");
-
-    
-    cwo_mat_print(inv);
-    printf("\n\n");
-
 
     for(size_t rows = mat.h, cols = mat.w, j = 0; j < cols; j++){
 
@@ -483,11 +498,6 @@ void cwo_mat_inverse(Matrix inv, Matrix mat){
         }
     }
 
-    
-    cwo_mat_print(copy);
-    printf("\n\n");
-
-
     for(size_t i = 0; i < copy.h; i++){
         for(size_t j = 0; j < copy.w; j++){
             if(CWO_MAT_INDEX(copy, i, j) != 0){
@@ -498,9 +508,6 @@ void cwo_mat_inverse(Matrix inv, Matrix mat){
             }
         }
     }
-    
-    cwo_mat_print(copy);
-    printf("\n\n");
 
     for(size_t i = 1; i < copy.h; i++){
         for(size_t j = 0; j < copy.w; j++){
@@ -514,21 +521,25 @@ void cwo_mat_inverse(Matrix inv, Matrix mat){
             }
         }
     }  
-    
-    cwo_mat_print(copy);
+
     cwo_mat_delete(copy);
 }
+
+
 
 // Some cpp operators
 #ifdef __cplusplus
 
+Matrix** cwo_mat_obj_handler;
 
+Matrix& operator+(){
+    
+}
 
 #endif //__cplusplus
 
 
 
-// TODO: inverse of a matrix
 // TODO: matrix transformations
 // TODO: finding matrix basis
 // TODO: finding eigenvalue and eigenvector of a matrix

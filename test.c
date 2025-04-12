@@ -1,40 +1,60 @@
-#define CWO_MATRIX_IMPLEMENTATIONS
-//#define CWO_VECTOR_IMPLEMENTATIONS
-#include "math/cwo_matrix.h"
+//#define CWO_MATRIX_IMPLEMENTATIONS
+#define CWO_VECTOR_IMPLEMENTATIONS
+//#define CWO_CALCULUS_IMPLEMENTATIONS
+//#include "math/cwo_matrix.h"
 #include "math/cwo_vector.h"
+//#include "math/cwo_calculus.h"
+
+#include <stdio.h>  
 
 void ll_tests();
 void stack_tests();
 void matrix_tests();
 void vector_tests();
+//void calc_tests();
 
 
 int main(){
-    matrix_tests();
+    vector_tests();
     return 0;
 }
+
+
+float f(float x){
+    return x;
+}
+
+
+#ifdef CWO_CALCULUS_IMPLEMENTATIONS
+void calc_tests(){
+
+    printf("Integral: %f\n", cwo_calc_integral(f, 0.0f, 1.0f));
+}
+#endif
+
 
 
 #ifdef CWO_VECTOR_IMPLEMENTATIONS
 void vector_tests(){
     Vector a;
     Vector b;
+    Vector proj;
     cwo_vec_create(&a, 3);
     cwo_vec_create(&b, 3);
-    cwo_vec_randomize(a);
-    cwo_vec_randomize(b);
+    cwo_vec_create(&proj, 3);
+
+    cwo_vec_rand(a);
+    cwo_vec_rand(b);
+
+    cwo_vec_proj(proj, a, b);
+    float angle = cwo_vec_angle(a, b);
 
     cwo_vec_print(a);
     printf("\n");
     cwo_vec_print(b);
-    printf("\n");
-    printf("\nDot: %f\n", cwo_vec_dot(a, b));
-
-    Vector norm;
-    cwo_vec_create(&norm, 3);
-    printf("\nCross: ");
-    cwo_vec_cross(norm, a, b);
-    cwo_vec_print(norm);
+    printf("\nprojection:");
+    cwo_vec_print(proj);
+    printf("\nangle: %f", angle);
     printf("\n");
 }
 #endif

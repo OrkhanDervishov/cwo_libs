@@ -62,7 +62,7 @@ typedef struct{
 void cwo_vec_create(Vector* vec, size_t size);
 void cwo_vec_delete(Vector vec);
 void cwo_vec_resize(Vector vec, CWO_VEC_VAL_TYPE val);
-void cwo_vec_randomize(Vector vec);
+void cwo_vec_rand(Vector vec);
 void cwo_vec_copy(Vector dest, Vector src);
 void cwo_vec_print(Vector vec);
 
@@ -73,6 +73,8 @@ void cwo_vec_sub(Vector dest, Vector vec);
 CWO_VEC_VAL_TYPE cwo_vec_mag(Vector vec);
 CWO_VEC_VAL_TYPE cwo_vec_dot(Vector a, Vector b);
 void cwo_vec_cross(Vector norm, Vector a, Vector b);
+void cwo_vec_proj(Vector proj, Vector v, Vector to);
+float cwo_vec_angle(Vector v, Vector u);
 
 
 #ifdef CWO_VECTOR_IMPLEMENTATIONS
@@ -110,7 +112,7 @@ void cwo_vec_resize(Vector vec, CWO_VEC_VAL_TYPE val){
 }
 
 
-void cwo_vec_randomize(Vector vec){
+void cwo_vec_rand(Vector vec){
     if(vec.elems == NULL) return;
     
     for(size_t i = 0; i < vec.size; i++){
@@ -210,6 +212,21 @@ void cwo_vec_cross(Vector norm, Vector a, Vector b){
     norm.elems[2] = a.elems[0]*b.elems[1] - a.elems[1]*b.elems[0];
 }
 
+
+void cwo_vec_proj(Vector proj, Vector v, Vector to){
+    CWO_VEC_VAL_TYPE umag = cwo_vec_dot(to, to);
+    CWO_VEC_VAL_TYPE prod = cwo_vec_dot(v, to);
+    cwo_vec_copy(proj, to);
+    cwo_vec_scale(proj, prod/umag);
+}
+
+
+float cwo_vec_angle(Vector v, Vector u){
+    CWO_VEC_VAL_TYPE vmag = cwo_vec_mag(v);
+    CWO_VEC_VAL_TYPE umag = cwo_vec_mag(u);
+    CWO_VEC_VAL_TYPE prod = cwo_vec_dot(v, u);
+    return acosf(prod/vmag/umag);
+} 
 
 
 #ifdef __cplusplus
