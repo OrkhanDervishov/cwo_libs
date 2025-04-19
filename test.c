@@ -1,5 +1,11 @@
-#define CWO_LINEAR_IMPLEMENTATIONS
-#include "math/cwo_linear.h"
+//#define CWO_MATRIX_IMPLEMENTATIONS
+//#define CWO_VECTOR_IMPLEMENTATIONS
+//#include "math/cwo_matrix.h"
+//#include "math/cwo_vector.h"
+#define CWO_CALCULUS_IMPLEMENTATIONS
+#include "math/cwo_calculus.h"
+//#define CWO_LINEAR_IMPLEMENTATIONS
+//#include "math/cwo_linear.h"
 
 #include <stdio.h>  
 
@@ -7,12 +13,14 @@
 
 void ll_tests();
 void stack_tests();
+void matrix_tests();
+void vector_tests();
 void linear_tests();
-//void calc_tests();
+void calc_tests();
 
 
 int main(){
-    linear_tests();
+    calc_tests();
     return 0;
 }
 
@@ -31,17 +39,15 @@ void linear_tests(){
     cwo_lin_vec_create(&dest, 3);
     cwo_lin_mat_create(&mat, 3, 3);
 
-    cwo_lin_vec_rand(vec);
     cwo_lin_mat_rand(mat);
-
-    cwo_lin_vec_mat_dot(dest, vec, mat, 1);
-
-    cwo_lin_vec_print(vec);
-    NL;
     cwo_lin_mat_print(mat);
     NL;
-    cwo_lin_vec_print(dest);
-    NL;
+    cwo_lin_mat_echelon(mat);
+    cwo_lin_mat_print(mat);
+
+    cwo_lin_vec_delete(vec);
+    cwo_lin_vec_delete(dest);
+    cwo_lin_mat_delete(mat);
 }
 #endif
 
@@ -49,11 +55,104 @@ void linear_tests(){
 #ifdef CWO_CALCULUS_IMPLEMENTATIONS
 void calc_tests(){
 
+    printf("Integral: %f\n", cwo_calc_rieman(f, 0.0f, 1.0f));
+    NL;
+    printf("Integral: %f\n", cwo_calc_trapezoid(f, 0.0f, 1.0f));
+    NL;
     printf("Integral: %f\n", cwo_calc_integral(f, 0.0f, 1.0f));
 }
 #endif
 
 
+
+#ifdef CWO_VECTOR_IMPLEMENTATIONS
+void vector_tests(){
+    Vector a;
+    Vector b;
+    Vector proj;
+    cwo_vec_create(&a, 3);
+    cwo_vec_create(&b, 3);
+    cwo_vec_create(&proj, 3);
+
+    cwo_vec_rand(a);
+    cwo_vec_rand(b);
+
+    cwo_vec_proj(proj, a, b);
+    float angle = cwo_vec_angle(a, b);
+
+    cwo_vec_print(a);
+    printf("\n");
+    cwo_vec_print(b);
+    printf("\nprojection:");
+    cwo_vec_print(proj);
+    printf("\nangle: %f", angle);
+    printf("\n");
+}
+#endif
+
+
+#ifdef CWO_MATRIX_IMPLEMENTATIONS
+void matrix_tests(){
+    Matrix mat;
+    Matrix mat2;
+    Matrix inv;
+
+    cwo_mat_create(&mat, 3, 3);
+    cwo_mat_create(&mat2, 3, 3);
+    cwo_mat_create(&inv, 3, 3);
+    
+    // cwo_mat_make_identity(mat);
+    // cwo_mat_scalar(mat, 3.0f);
+    cwo_mat_randomize(mat);
+    cwo_mat_print(mat);
+    printf("\n------------------------------\n");
+    // //cwo_mat_print(mat);
+    // cwo_mat_copy(mat2, mat);
+    // cwo_mat_gauss(mat2);
+    // cwo_mat_print(mat2);
+    // printf("\n------------------------------\n");
+    // cwo_mat_echelon(mat2);
+    // printf("\n------------------------------\n");
+    // cwo_mat_print(mat2);
+
+    // cwo_mat_reduced(mat2);
+    // printf("\n------------------------------\n");
+    // cwo_mat_print(mat2);
+
+    //printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat2));
+    // printf("\n\ndetermiant: %f\n", cwo_mat_determinant(mat));
+    printf("\n------------------------------\n");
+
+    cwo_mat_inverse(inv, mat);
+    printf("\n------------------------------\n");
+    cwo_mat_print(inv);
+
+    printf("\n------------------------------\n");
+    cwo_mat_dot(mat2, mat, inv);
+    cwo_mat_print(mat2);
+
+
+
+
+    // cwo_mat_create(&mat2, 5, 5, 1);
+    // cwo_mat_rand_elems(mat2);
+    // cwo_mat_print(mat2);
+
+    // printf("\n------------------------------\n");
+
+    // cwo_mat_sum(mat, mat2);
+    // cwo_mat_print(mat);
+
+    // printf("\n------------------------------\n");
+
+    // cwo_mat_gauss(mat);
+    // cwo_mat_print(mat);
+
+    cwo_mat_delete(inv);
+    cwo_mat_delete(mat);
+    cwo_mat_delete(mat2);
+}
+#endif
 
 
 #ifdef CWO_STACK_IMPLEMENTATIONS
